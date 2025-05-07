@@ -65,6 +65,38 @@ var (
 	app = &cli.App{
 		Name:  "prostar-pwm",
 		Usage: "ProStar PWM CLI",
+		Commands: []*cli.Command{
+			{
+				Name:   "raw-adc-data",
+				Usage:  "raw ADC data",
+				Action: doRawADCData,
+			},
+			{
+				Name:   "filtered-adc-data",
+				Usage:  "filtered ADC data",
+				Action: doFilteredADCData,
+			},
+			{
+				Name:   "temperature-data",
+				Usage:  "temperature data",
+				Action: doTemperatureData,
+			},
+			{
+				Name:   "charger-status",
+				Usage:  "charger status",
+				Action: doChargerStatus,
+			},
+			{
+				Name:   "load-status",
+				Usage:  "load status",
+				Action: doLoadStatus,
+			},
+			{
+				Name:   "misc-data",
+				Usage:  "misc data",
+				Action: doMiscData,
+			},
+		},
 		Flags: []cli.Flag{
 			serialPortFlag,
 			baudRateFlag,
