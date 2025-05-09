@@ -330,6 +330,190 @@ func (dev *Dev) ReadMiscData() (MiscData, error) {
 	return r, nil
 }
 
+func (dev *Dev) ReadChargeSettings() (ChargeSettings, error) {
+	dev.mutex.Lock()
+	defer dev.mutex.Unlock()
+
+	err := dev.requestSetup()
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+
+	var r ChargeSettings
+
+	r.RegulationVoltageAt25C, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe000)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.FloatVoltageAt25C, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe001)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.TimeBeforeEnteringFloat, err = dev.readHoldingRegister(0xe002)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.TimeBeforeEnteringFloatDueToLowBattery, err = dev.readHoldingRegister(0xe003)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.VoltageTriggerForLowBatteryFloatTime, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe004)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.VoltageToCancelFloat, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe005)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.ExitFloatTime, err = dev.readHoldingRegister(0xe006)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.EqualizeVoltageAt25C, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe007)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.DaysBetweenEQCycles, err = dev.readHoldingRegister(0xe008)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.EqualizeTimeLimitAboveEVReg, err = dev.readHoldingRegister(0xe009)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.EqualizeTimeLimitAtEVEq, err = dev.readHoldingRegister(0xe00a)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.ReferenceChargeVoltageLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe010)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.TemperatureCompensationCoefficient, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe01a)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.HighVoltageDisconnectAt25C, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe01b)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.HighVoltageReconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe01c)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.MaximumChargeVoltageReference, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe01d)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.MaxBatteryTempCompensationLimit, err = dev.readHoldingRegisterFromUint16ToInt16(0xe01e)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+	r.MinBatteryTempCompensationLimit, err = dev.readHoldingRegisterFromUint16ToInt16(0xe01f)
+	if err != nil {
+		return ChargeSettings{}, err
+	}
+
+	return r, nil
+}
+
+func (dev *Dev) ReadLoadSettings() (LoadSettings, error) {
+	dev.mutex.Lock()
+	defer dev.mutex.Unlock()
+
+	err := dev.requestSetup()
+	if err != nil {
+		return LoadSettings{}, err
+	}
+
+	var r LoadSettings
+
+	r.LowVoltageDisconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe022)
+	if err != nil {
+		return LoadSettings{}, err
+	}
+	r.LoadHighVoltageReconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe023)
+	if err != nil {
+		return LoadSettings{}, err
+	}
+	r.LoadHighVoltageDisconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe024)
+	if err != nil {
+		return LoadSettings{}, err
+	}
+	r.LoadHighVoltageReconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe025)
+	if err != nil {
+		return LoadSettings{}, err
+	}
+	r.LVDLoadCurrentCompensation, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe026)
+	if err != nil {
+		return LoadSettings{}, err
+	}
+	r.LVDWarningTimeout, err = dev.readHoldingRegister(0xe027)
+	if err != nil {
+		return LoadSettings{}, err
+	}
+
+	return r, nil
+}
+
+func (dev *Dev) ReadMiscSettings() (MiscSettings, error) {
+	dev.mutex.Lock()
+	defer dev.mutex.Unlock()
+
+	err := dev.requestSetup()
+	if err != nil {
+		return MiscSettings{}, err
+	}
+
+	var r MiscSettings
+
+	r.LEDGreenToGreenAndYellowLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe030)
+	if err != nil {
+		return MiscSettings{}, err
+	}
+	r.LEDGreenAndYellowToYellowLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe031)
+	if err != nil {
+		return MiscSettings{}, err
+	}
+	r.LEDYellowToYellowAndRedLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe032)
+	if err != nil {
+		return MiscSettings{}, err
+	}
+	r.LEDYellowAndRedToRedFlashingLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe033)
+	if err != nil {
+		return MiscSettings{}, err
+	}
+	r.ModbusID, err = dev.readHoldingRegister(0xe034)
+	if err != nil {
+		return MiscSettings{}, err
+	}
+	r.MeterbusID, err = dev.readHoldingRegister(0xe035)
+	if err != nil {
+		return MiscSettings{}, err
+	}
+
+	return r, nil
+}
+
+func (dev *Dev) ReadPWMSettings() (PWMSettings, error) {
+	dev.mutex.Lock()
+	defer dev.mutex.Unlock()
+
+	err := dev.requestSetup()
+	if err != nil {
+		return PWMSettings{}, err
+	}
+
+	var r PWMSettings
+
+	r.ChargeCurrentLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe038)
+	if err != nil {
+		return PWMSettings{}, err
+	}
+
+	return r, nil
+}
+
 func (dev *Dev) readInputRegister(addr uint16) (*uint16, error) {
 	v, err := dev.mc.ReadRegister(addr, modbus.INPUT_REGISTER)
 	if err != nil {
@@ -343,8 +527,51 @@ func (dev *Dev) readInputRegister(addr uint16) (*uint16, error) {
 	return &v, nil
 }
 
+func (dev *Dev) readHoldingRegister(addr uint16) (*uint16, error) {
+	v, err := dev.mc.ReadRegister(addr, modbus.HOLDING_REGISTER)
+	if err != nil {
+		if errors.Is(err, modbus.ErrIllegalDataAddress) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	return &v, nil
+}
+
+func (dev *Dev) readHoldingRegisterFromUint16ToInt16(addr uint16) (*int16, error) {
+	v, err := dev.mc.ReadRegister(addr, modbus.HOLDING_REGISTER)
+	if err != nil {
+		if errors.Is(err, modbus.ErrIllegalDataAddress) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	v2 := int16(v)
+
+	return &v2, nil
+}
+
 func (dev *Dev) readInputRegisterFromFloat16ToFloat32(addr uint16) (*float32, error) {
 	v, err := dev.mc.ReadRegister(addr, modbus.INPUT_REGISTER)
+	if err != nil {
+		if errors.Is(err, modbus.ErrIllegalDataAddress) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	f16 := float16.Frombits(v)
+	f32 := f16.Float32()
+	return &f32, nil
+}
+
+func (dev *Dev) readHoldingRegisterFromFloat16ToFloat32(addr uint16) (*float32, error) {
+	v, err := dev.mc.ReadRegister(addr, modbus.HOLDING_REGISTER)
 	if err != nil {
 		if errors.Is(err, modbus.ErrIllegalDataAddress) {
 			return nil, nil

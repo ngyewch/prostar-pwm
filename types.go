@@ -260,8 +260,163 @@ type AlarmDetails struct {
 
 type LEDState uint16
 
-// TODO
+const (
+	LEDStateLEDStart LEDState = iota
+	LEDStateLEDStart2
+	LEDStateLEDBranch
+	LEDStateEqualize
+	LEDStateFloat
+	LEDStateAbsorption
+	LEDStateGreenLED
+	LEDStateGreenYellowLED
+	LEDStateYellowLED
+	LEDStateYellowRedLED
+	LEDStateBlinkRedLED
+	LEDStateRedLED
+	LEDStateR_Y_GError
+	LEDStateRY_GError
+	LEDStateRG_YError
+	LEDStateR_YError
+	LEDStateR_GError
+	LEDStateRY_GYError
+	LEDStateGYRError
+	LEDStateGYRx2
+	LEDStateOff
+	LEDStateGYRx2_Greenx2
+	LEDStateGYRx2_Redx2
+)
+
+func (v LEDState) String() string {
+	switch v {
+	case LEDStateLEDStart:
+		return "LED_START"
+	case LEDStateLEDStart2:
+		return "LED_START2"
+	case LEDStateLEDBranch:
+		return "LED_BRANCH"
+	case LEDStateEqualize:
+		return "EQUALIZE"
+	case LEDStateFloat:
+		return "FLOAT"
+	case LEDStateAbsorption:
+		return "ABSORPTION"
+	case LEDStateGreenLED:
+		return "GREEN LED"
+	case LEDStateGreenYellowLED:
+		return "GREEN / YELLOW LED"
+	case LEDStateYellowLED:
+		return "YELLOW LED"
+	case LEDStateYellowRedLED:
+		return "YELLOW / RED LED"
+	case LEDStateBlinkRedLED:
+		return "BLINK RED LED"
+	case LEDStateRedLED:
+		return "RED LED"
+	case LEDStateR_Y_GError:
+		return "R-Y-G ERROR"
+	case LEDStateRY_GError:
+		return "R/Y-G ERROR"
+	case LEDStateRG_YError:
+		return "R/G-Y ERROR"
+	case LEDStateR_YError:
+		return "R-Y ERROR"
+	case LEDStateR_GError:
+		return "R-G ERROR"
+	case LEDStateRY_GYError:
+		return "R/Y-G/Y ERROR"
+	case LEDStateGYRError:
+		return "G/Y/R ERROR"
+	case LEDStateGYRx2:
+		return "G/Y/R x2"
+	case LEDStateOff:
+		return "OFF"
+	case LEDStateGYRx2_Greenx2:
+		return "G/Y/R x2 - GREEN x2"
+	case LEDStateGYRx2_Redx2:
+		return "G/Y/R x2 - RED x2"
+	default:
+		return fmt.Sprintf("0x%04x", uint16(v))
+	}
+}
 
 type ChargeStatusLEDState uint16
 
-// TODO
+const (
+	ChargeStatusLEDStateLEDStart ChargeStatusLEDState = iota
+	ChargeStatusLEDStateLEDStart2
+	ChargeStatusLEDStateLEDBranch
+	ChargeStatusLEDStateEqualize
+	ChargeStatusLEDStateFloat
+	ChargeStatusLEDStateAbsorption
+	ChargeStatusLEDStateGreenLED
+	ChargeStatusLEDStateGreenYellowLED
+	ChargeStatusLEDStateYellowLED
+)
+
+func (v ChargeStatusLEDState) String() string {
+	switch v {
+	case ChargeStatusLEDStateLEDStart:
+		return "LED_START"
+	case ChargeStatusLEDStateLEDStart2:
+		return "LED_START2"
+	case ChargeStatusLEDStateLEDBranch:
+		return "LED_BRANCH"
+	case ChargeStatusLEDStateEqualize:
+		return "EQUALIZE"
+	case ChargeStatusLEDStateFloat:
+		return "FLOAT"
+	case ChargeStatusLEDStateAbsorption:
+		return "ABSORPTION"
+	case ChargeStatusLEDStateGreenLED:
+		return "GREEN LED"
+	case ChargeStatusLEDStateGreenYellowLED:
+		return "GREEN / YELLOW LED"
+	case ChargeStatusLEDStateYellowLED:
+		return "YELLOW LED"
+	default:
+		return fmt.Sprintf("0x%04x", uint16(v))
+	}
+}
+
+type ChargeSettings struct {
+	RegulationVoltageAt25C                 *float32 // V,    EV_reg             Regulation Voltage @ 25ºC
+	FloatVoltageAt25C                      *float32 // V,    EV_float           Float Voltage @ 25ºC
+	TimeBeforeEnteringFloat                *uint16  // s,    Et_float           Time Before Entering Float (Absorption Time)
+	TimeBeforeEnteringFloatDueToLowBattery *uint16  // s,    Et_floatlb         Time Before Entering Float due to Low Battery (Absorption Extension Time)
+	VoltageTriggerForLowBatteryFloatTime   *float32 // V,    EV_floatlb_trip    Voltage Trigger for Low Battery Float Time
+	VoltageToCancelFloat                   *float32 // V,    EV_float_cancel    Voltage to Cancel Float
+	ExitFloatTime                          *uint16  // s,    Et_float_exit_cum  Exit Float Time
+	EqualizeVoltageAt25C                   *float32 // V,    EV_eq              Equalize Voltage @ 25ºC
+	DaysBetweenEQCycles                    *uint16  // days, Et_eqcalendar      Days Between EQ Cycles
+	EqualizeTimeLimitAboveEVReg            *uint16  // s,    Et_eq_above        Equalize Time Limit above EV_reg
+	EqualizeTimeLimitAtEVEq                *uint16  // s,    Et_eq_reg          Equalize Time Limit at EV_eq
+	ReferenceChargeVoltageLimit            *float32 // V,    Evb_ref_charge_lim Reference Charge Voltage Limit
+	TemperatureCompensationCoefficient     *float32 // V,    EV_tempcomp        Temperature Compensation Coefficient
+	HighVoltageDisconnectAt25C             *float32 // V,    EV_hvd             High Voltage Disconnect @ 25ºC
+	HighVoltageReconnect                   *float32 // V,    EV_hvr             High Voltage Reconnect
+	MaximumChargeVoltageReference          *float32 // V,    Evb_ref_lim        Maximum Charge Voltage Reference (0 disables)
+	MaxBatteryTempCompensationLimit        *int16   // ºC,   ETb_max            Max Battery Temp Compensation Limit
+	MinBatteryTempCompensationLimit        *int16   // ºC,   ETb_min            Min Battery Temp Compensation Limit
+}
+
+type LoadSettings struct {
+	LowVoltageDisconnect       *float32 // V, EV_lvd      Low Voltage Disconnect
+	LowVoltageReconnect        *float32 // V, EV_lvr      Low Voltage Reconnect
+	LoadHighVoltageDisconnect  *float32 // V, EV_lhvd     Load High Voltage Disconnect
+	LoadHighVoltageReconnect   *float32 // V, EV_lhvr     Load High Voltage Reconnect
+	LVDLoadCurrentCompensation *float32 // Ω, ER_icomp    LVD Load Current Compensation
+	LVDWarningTimeout          *uint16  // s, Et_lvd_warn LVD Warning Timeout
+}
+
+type MiscSettings struct {
+	LEDGreenToGreenAndYellowLimit     *float32 // V, EV_soc_g_gy LED Green to Green&Yellow Limit
+	LEDGreenAndYellowToYellowLimit    *float32 // V, EV_soc_gy_y LED Green&Yellow to Yellow Limit
+	LEDYellowToYellowAndRedLimit      *float32 // V, EV_soc_y_yr Yellow to Yellow&Red Limit
+	LEDYellowAndRedToRedFlashingLimit *float32 // V, EV_soc_yr_r Yellow&Red to Red Flashing Limit
+	ModbusID                          *uint16  //    Emodbus_id  Modbus ID
+	MeterbusID                        *uint16  //    Emeter_id   Meterbus ID
+}
+
+type PWMSettings struct {
+	ChargeCurrentLimit *float32 // A, Eic_lim Charge Current Limit
+}

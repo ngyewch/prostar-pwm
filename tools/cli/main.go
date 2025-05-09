@@ -96,6 +96,26 @@ var (
 				Usage:  "misc data",
 				Action: doMiscData,
 			},
+			{
+				Name:   "charge-settings",
+				Usage:  "charge settings",
+				Action: doChargeSettings,
+			},
+			{
+				Name:   "load-settings",
+				Usage:  "load settings",
+				Action: doLoadSettings,
+			},
+			{
+				Name:   "misc-settings",
+				Usage:  "misc settings",
+				Action: doMiscSettings,
+			},
+			{
+				Name:   "pwm-settings",
+				Usage:  "pwm settings",
+				Action: doPWMSettings,
+			},
 		},
 		Flags: []cli.Flag{
 			serialPortFlag,
