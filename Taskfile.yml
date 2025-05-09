@@ -9,7 +9,7 @@ tasks:
   build-single:
     desc: Build (single)
     cmds:
-      - goreleaser build --snapshot --clean --single-target --output dist/epever-solar
+      - goreleaser build --snapshot --clean --single-target --output dist/prostar-pwm
 
   dependencyUpdates:
     desc: Show dependency updates
