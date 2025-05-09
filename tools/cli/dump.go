@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/yassinebenaid/godump"
+	"os"
 )
 
 var (
@@ -9,7 +10,11 @@ var (
 )
 
 func init() {
+	noColor := os.Getenv("NO_COLOR") == "1"
 	dumpTheme := godump.DefaultTheme
+	if noColor {
+		dumpTheme = godump.Theme{}
+	}
 	dumpTheme.Address = &suppressedStyle{}
 
 	dumper = godump.Dumper{
