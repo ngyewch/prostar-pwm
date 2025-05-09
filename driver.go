@@ -432,7 +432,7 @@ func (dev *Dev) ReadLoadSettings() (LoadSettings, error) {
 	if err != nil {
 		return LoadSettings{}, err
 	}
-	r.LoadHighVoltageReconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe023)
+	r.LowVoltageReconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe023)
 	if err != nil {
 		return LoadSettings{}, err
 	}
