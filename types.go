@@ -420,3 +420,18 @@ type MiscSettings struct {
 type PWMSettings struct {
 	ChargeCurrentLimit *float32 // A, Eic_lim Charge Current Limit
 }
+
+type LoggedDataRecord struct {
+	Hourmeter                  uint32            // hours, hourmeter
+	AlarmDaily                 AlarmDetails      // -,     alarm_daily       Alarm Bitfield – daily
+	LoadFaultDaily             LoadFaultDetails  // -,     load_fault_daily  Load Fault Bitfield – daily
+	ArrayFaultDaily            ArrayFaultDetails // -,     array_fault_daily Array Fault Bitfield – daily
+	BatteryVoltageMinimumDaily float32           // V,     Vb_min_daily,     Battery Voltage Minimum – daily
+	BatteryVoltageMaximumDaily float32           // V,     Vb_max_daily,     Battery Voltage Maximum – daily
+	AhChargeDaily              float32           // Ah,    Ahc_daily         Ah Charge – daily
+	AhLoadDaily                float32           // Ah,    Ahl_daily         Ah Load – daily
+	ArrayVoltageMaximumDaily   float32           // V,     Va_max_daily      Maximum Array Voltage – daily
+	TimeInAbsorptionDaily      uint16            // min,   time_ab_daily     Time in Absorption – daily
+	TimeInEqualizeDaily        uint16            // min,   time_eq_daily     Time in Equalize – daily
+	TimeInFloatDaily           uint16            // min,   time_fl_daily     Time in Float – daily
+}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/simonvetter/modbus"
 	"github.com/x448/float16"
+	"go.octolab.org/pointer"
 	"sync"
 )
 
@@ -514,6 +515,48 @@ func (dev *Dev) ReadPWMSettings() (PWMSettings, error) {
 	return r, nil
 }
 
+func (dev *Dev) ReadLoggedData() ([]LoggedDataRecord, error) {
+	dev.mutex.Lock()
+	defer dev.mutex.Unlock()
+
+	err := dev.requestSetup()
+	if err != nil {
+		return nil, err
+	}
+
+	var records []LoggedDataRecord
+
+	for i := 0; i < 256; i++ {
+		v, err := dev.mc.ReadRegisters(0x8000+uint16(i*16), 16, modbus.INPUT_REGISTER)
+		if err != nil {
+			if errors.Is(err, modbus.ErrIllegalDataAddress) {
+				return nil, nil
+			} else {
+				return nil, err
+			}
+		}
+		hourmeter := fromUint32(v[0:2])
+		if (hourmeter != 0x000000) && (hourmeter != 0xffffff) {
+			records = append(records, LoggedDataRecord{
+				Hourmeter:                  hourmeter,
+				AlarmDaily:                 Alarm(fromUint32(v[2:4])).Details(),
+				LoadFaultDaily:             LoadFault(fromUint32(v[4:6])).Details(),
+				ArrayFaultDaily:            ArrayFault(fromUint32(v[6:8])).Details(),
+				BatteryVoltageMinimumDaily: float16.Frombits(v[8]).Float32(),
+				BatteryVoltageMaximumDaily: float16.Frombits(v[9]).Float32(),
+				AhChargeDaily:              float16.Frombits(v[10]).Float32(),
+				AhLoadDaily:                float16.Frombits(v[11]).Float32(),
+				ArrayVoltageMaximumDaily:   float16.Frombits(v[12]).Float32(),
+				TimeInAbsorptionDaily:      v[13],
+				TimeInEqualizeDaily:        v[14],
+				TimeInFloatDaily:           v[15],
+			})
+		}
+	}
+
+	return records, nil
+}
+
 func (dev *Dev) readInputRegister(addr uint16) (*uint16, error) {
 	v, err := dev.mc.ReadRegister(addr, modbus.INPUT_REGISTER)
 	if err != nil {
@@ -564,10 +607,7 @@ func (dev *Dev) readInputRegisterFromFloat16ToFloat32(addr uint16) (*float32, er
 			return nil, err
 		}
 	}
-
-	f16 := float16.Frombits(v)
-	f32 := f16.Float32()
-	return &f32, nil
+	return pointer.ToFloat32(float16.Frombits(v).Float32()), nil
 }
 
 func (dev *Dev) readHoldingRegisterFromFloat16ToFloat32(addr uint16) (*float32, error) {
@@ -579,10 +619,7 @@ func (dev *Dev) readHoldingRegisterFromFloat16ToFloat32(addr uint16) (*float32, 
 			return nil, err
 		}
 	}
-
-	f16 := float16.Frombits(v)
-	f32 := f16.Float32()
-	return &f32, nil
+	return pointer.ToFloat32(float16.Frombits(v).Float32()), nil
 }
 
 func (dev *Dev) readInputRegisterFromUint16ToFloat32(addr uint16, divisor float32) (*float32, error) {
@@ -608,11 +645,7 @@ func (dev *Dev) readInputRegisterFromUint32(addr uint16) (*uint32, error) {
 			return nil, err
 		}
 	}
-	var b []byte
-	b = binary.BigEndian.AppendUint16(b, v[0])
-	b = binary.BigEndian.AppendUint16(b, v[1])
-	u32 := binary.BigEndian.Uint32(b)
-	return &u32, nil
+	return pointer.ToUint32(fromUint32(v)), nil
 }
 
 func (dev *Dev) readInputRegisterFromUint32ToFloat32(addr uint16, divisor float32) (*float32, error) {
@@ -624,9 +657,12 @@ func (dev *Dev) readInputRegisterFromUint32ToFloat32(addr uint16, divisor float3
 			return nil, err
 		}
 	}
+	return pointer.ToFloat32(float32(fromUint32(v)) / divisor), nil
+}
+
+func fromUint32(v []uint16) uint32 {
 	var b []byte
 	b = binary.BigEndian.AppendUint16(b, v[0])
 	b = binary.BigEndian.AppendUint16(b, v[1])
-	f32 := float32(int32(binary.BigEndian.Uint32(b))) / divisor
-	return &f32, nil
+	return binary.BigEndian.Uint32(b)
 }

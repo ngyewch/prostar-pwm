@@ -116,6 +116,11 @@ var (
 				Usage:  "pwm settings",
 				Action: doPWMSettings,
 			},
+			{
+				Name:   "logged-data",
+				Usage:  "logged data",
+				Action: doLoggedData,
+			},
 		},
 		Flags: []cli.Flag{
 			serialPortFlag,
