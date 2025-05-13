@@ -536,7 +536,7 @@ func (dev *Dev) ReadLoggedData() ([]LoggedDataRecord, error) {
 			}
 		}
 		hourmeter := fromUint32(v[0:2])
-		if (hourmeter != 0x000000) && (hourmeter != 0xffffff) {
+		if (hourmeter != 0x00000000) && (hourmeter != 0xffffffff) {
 			records = append(records, LoggedDataRecord{
 				Hourmeter:                  hourmeter,
 				AlarmDaily:                 Alarm(fromUint32(v[2:4])).Details(),
