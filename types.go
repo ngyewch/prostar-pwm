@@ -421,6 +421,20 @@ type PWMSettings struct {
 	ChargeCurrentLimit *float32 // A, Eic_lim Charge Current Limit
 }
 
+type Statistics struct {
+	Hourmeter             *uint32  // hours, hourmeter
+	AhLoadResettable      *float32 // Ah,    EAhl_r
+	AhLoadTotal           *float32 // Ah,    Eahl_t
+	AhChargeResettable    *float32 // Ah,    Eahc_r
+	AhChargeTotal         *float32 // Ah,    Eahc_t
+	KWhcResettable        *float32 // kWh,   EkWhc_r
+	KWhcTotal             *float32 // kWh,   EkWhc_t
+	BatteryVoltageMinimum *float32 // V,     EVb_min
+	BatteryVoltageMaximum *float32 // V,     EVb_max
+	ArrayVoltageMaximum   *float32 // V,     EVa_max
+	TimeSinceLastEqualize *uint16  // days,  Etmr_eqcalander
+}
+
 type LoggedDataRecord struct {
 	Hourmeter                  uint32            // hours, hourmeter
 	AlarmDaily                 AlarmDetails      // -,     alarm_daily       Alarm Bitfield – daily

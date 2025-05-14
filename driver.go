@@ -5,21 +5,24 @@ import (
 	"errors"
 	"github.com/simonvetter/modbus"
 	"github.com/x448/float16"
-	"go.octolab.org/pointer"
 	"sync"
 )
 
 type Dev struct {
-	mc     *modbus.ModbusClient
-	unitId uint8
-	mutex  *sync.Mutex
+	mc               *modbus.ModbusClient
+	unitId           uint8
+	mutex            *sync.Mutex
+	inputRegisters   *Registers
+	holdingRegisters *Registers
 }
 
 func New(mc *modbus.ModbusClient, unitId uint8, mutex *sync.Mutex) *Dev {
 	return &Dev{
-		mc:     mc,
-		unitId: unitId,
-		mutex:  mutex,
+		mc:               mc,
+		unitId:           unitId,
+		mutex:            mutex,
+		inputRegisters:   NewRegisters(mc, modbus.INPUT_REGISTER),
+		holdingRegisters: NewRegisters(mc, modbus.HOLDING_REGISTER),
 	}
 }
 
@@ -46,31 +49,31 @@ func (dev *Dev) ReadRawADCData() (RawADCData, error) {
 
 	var r RawADCData
 
-	r.SupplyVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0004)
+	r.SupplyVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0004)
 	if err != nil {
 		return RawADCData{}, err
 	}
-	r.GateDriveVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0005)
+	r.GateDriveVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0005)
 	if err != nil {
 		return RawADCData{}, err
 	}
-	r.MeterBusSupplyVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0006)
+	r.MeterBusSupplyVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0006)
 	if err != nil {
 		return RawADCData{}, err
 	}
-	r.InternalReferenceVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0007)
+	r.InternalReferenceVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0007)
 	if err != nil {
 		return RawADCData{}, err
 	}
-	r.NegativeSupplyRailForCurrentMeasurement, err = dev.readInputRegisterFromFloat16ToFloat32(0x0008)
+	r.NegativeSupplyRailForCurrentMeasurement, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0008)
 	if err != nil {
 		return RawADCData{}, err
 	}
-	r.LoadFETGateVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0009)
+	r.LoadFETGateVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0009)
 	if err != nil {
 		return RawADCData{}, err
 	}
-	r.ArrayFETGateVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x000a)
+	r.ArrayFETGateVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x000a)
 	if err != nil {
 		return RawADCData{}, err
 	}
@@ -89,35 +92,35 @@ func (dev *Dev) ReadFilteredADCData() (FilteredADCData, error) {
 
 	var r FilteredADCData
 
-	r.ArrayCurrent, err = dev.readInputRegisterFromFloat16ToFloat32(0x0011)
+	r.ArrayCurrent, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0011)
 	if err != nil {
 		return FilteredADCData{}, err
 	}
-	r.BatteryTerminalVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0012)
+	r.BatteryTerminalVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0012)
 	if err != nil {
 		return FilteredADCData{}, err
 	}
-	r.ArrayVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0013)
+	r.ArrayVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0013)
 	if err != nil {
 		return FilteredADCData{}, err
 	}
-	r.LoadVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0014)
+	r.LoadVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0014)
 	if err != nil {
 		return FilteredADCData{}, err
 	}
-	r.LoadCurrent, err = dev.readInputRegisterFromFloat16ToFloat32(0x0016)
+	r.LoadCurrent, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0016)
 	if err != nil {
 		return FilteredADCData{}, err
 	}
-	r.BatterySenseVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0017)
+	r.BatterySenseVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0017)
 	if err != nil {
 		return FilteredADCData{}, err
 	}
-	r.BatteryVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0018)
+	r.BatteryVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0018)
 	if err != nil {
 		return FilteredADCData{}, err
 	}
-	r.BatteryCurrent, err = dev.readInputRegisterFromFloat16ToFloat32(0x0019)
+	r.BatteryCurrent, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0019)
 	if err != nil {
 		return FilteredADCData{}, err
 	}
@@ -136,19 +139,19 @@ func (dev *Dev) ReadTemperatureData() (TemperatureData, error) {
 
 	var r TemperatureData
 
-	r.Heatsink, err = dev.readInputRegisterFromFloat16ToFloat32(0x001a)
+	r.Heatsink, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x001a)
 	if err != nil {
 		return TemperatureData{}, err
 	}
-	r.Battery, err = dev.readInputRegisterFromFloat16ToFloat32(0x001b)
+	r.Battery, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x001b)
 	if err != nil {
 		return TemperatureData{}, err
 	}
-	r.Ambient, err = dev.readInputRegisterFromFloat16ToFloat32(0x001c)
+	r.Ambient, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x001c)
 	if err != nil {
 		return TemperatureData{}, err
 	}
-	r.Remote, err = dev.readInputRegisterFromFloat16ToFloat32(0x001d)
+	r.Remote, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x001d)
 	if err != nil {
 		return TemperatureData{}, err
 	}
@@ -168,7 +171,7 @@ func (dev *Dev) ReadChargerStatus() (ChargerStatus, error) {
 	var r ChargerStatus
 
 	{
-		v, err := dev.readInputRegister(0x0021)
+		v, err := dev.inputRegisters.ReadUint16Ptr(0x0021)
 		if err != nil {
 			return ChargerStatus{}, err
 		}
@@ -178,7 +181,7 @@ func (dev *Dev) ReadChargerStatus() (ChargerStatus, error) {
 		}
 	}
 	{
-		v, err := dev.readInputRegister(0x0022)
+		v, err := dev.inputRegisters.ReadUint16Ptr(0x0022)
 		if err != nil {
 			return ChargerStatus{}, err
 		}
@@ -188,35 +191,35 @@ func (dev *Dev) ReadChargerStatus() (ChargerStatus, error) {
 			r.ArrayFault = &details
 		}
 	}
-	r.BatteryVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0023)
+	r.BatteryVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0023)
 	if err != nil {
 		return ChargerStatus{}, err
 	}
-	r.BatteryRegulatorReferenceVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0024)
+	r.BatteryRegulatorReferenceVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0024)
 	if err != nil {
 		return ChargerStatus{}, err
 	}
-	r.AhChargeResettable, err = dev.readInputRegisterFromUint32ToFloat32(0x0026, 10)
+	r.AhChargeResettable, err = dev.inputRegisters.ReadUint32AsFloat32Ptr(0x0026, WordOrderingHighFirst, 10)
 	if err != nil {
 		return ChargerStatus{}, err
 	}
-	r.AhChargeTotal, err = dev.readInputRegisterFromUint32ToFloat32(0x0028, 10)
+	r.AhChargeTotal, err = dev.inputRegisters.ReadUint32AsFloat32Ptr(0x0028, WordOrderingHighFirst, 10)
 	if err != nil {
 		return ChargerStatus{}, err
 	}
-	r.KWhChargeResettable, err = dev.readInputRegisterFromUint16ToFloat32(0x002a, 10)
+	r.KWhChargeResettable, err = dev.inputRegisters.ReadUint16AsFloat32Ptr(0x002a, 10)
 	if err != nil {
 		return ChargerStatus{}, err
 	}
-	r.KWhChargeTotal, err = dev.readInputRegisterFromUint16ToFloat32(0x002b, 10)
+	r.KWhChargeTotal, err = dev.inputRegisters.ReadUint16AsFloat32Ptr(0x002b, 10)
 	if err != nil {
 		return ChargerStatus{}, err
 	}
-	r.BatteryTemperatureFoldback100PercentOutputLimit, err = dev.readInputRegisterFromFloat16ToFloat32(0x002c)
+	r.BatteryTemperatureFoldback100PercentOutputLimit, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x002c)
 	if err != nil {
 		return ChargerStatus{}, err
 	}
-	r.BatteryTemperatureFoldback0PercentOutputLimit, err = dev.readInputRegisterFromFloat16ToFloat32(0x002d)
+	r.BatteryTemperatureFoldback0PercentOutputLimit, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x002d)
 	if err != nil {
 		return ChargerStatus{}, err
 	}
@@ -236,7 +239,7 @@ func (dev *Dev) ReadLoadStatus() (LoadStatus, error) {
 	var r LoadStatus
 
 	{
-		v, err := dev.readInputRegister(0x002e)
+		v, err := dev.inputRegisters.ReadUint16Ptr(0x002e)
 		if err != nil {
 			return LoadStatus{}, err
 		}
@@ -246,7 +249,7 @@ func (dev *Dev) ReadLoadStatus() (LoadStatus, error) {
 		}
 	}
 	{
-		v, err := dev.readInputRegister(0x002f)
+		v, err := dev.inputRegisters.ReadUint16Ptr(0x002f)
 		if err != nil {
 			return LoadStatus{}, err
 		}
@@ -256,19 +259,19 @@ func (dev *Dev) ReadLoadStatus() (LoadStatus, error) {
 			r.LoadFault = &details
 		}
 	}
-	r.LoadCurrentCompensatedLVDVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0030)
+	r.LoadCurrentCompensatedLVDVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0030)
 	if err != nil {
 		return LoadStatus{}, err
 	}
-	r.LoadHVDVoltage, err = dev.readInputRegisterFromFloat16ToFloat32(0x0031)
+	r.LoadHVDVoltage, err = dev.inputRegisters.ReadFloat16AsFloat32Ptr(0x0031)
 	if err != nil {
 		return LoadStatus{}, err
 	}
-	r.AhLoadResettable, err = dev.readInputRegisterFromUint32ToFloat32(0x0032, 10)
+	r.AhLoadResettable, err = dev.inputRegisters.ReadUint32AsFloat32Ptr(0x0032, WordOrderingHighFirst, 10)
 	if err != nil {
 		return LoadStatus{}, err
 	}
-	r.AhLoadTotal, err = dev.readInputRegisterFromUint32ToFloat32(0x0034, 10)
+	r.AhLoadTotal, err = dev.inputRegisters.ReadUint32AsFloat32Ptr(0x0034, WordOrderingHighFirst, 10)
 	if err != nil {
 		return LoadStatus{}, err
 	}
@@ -287,12 +290,12 @@ func (dev *Dev) ReadMiscData() (MiscData, error) {
 
 	var r MiscData
 
-	r.Hourmeter, err = dev.readInputRegisterFromUint32(0x0036)
+	r.Hourmeter, err = dev.inputRegisters.ReadUint32Ptr(0x0036, WordOrderingHighFirst)
 	if err != nil {
 		return MiscData{}, err
 	}
 	{
-		v, err := dev.readInputRegisterFromUint32(0x0038)
+		v, err := dev.inputRegisters.ReadUint32Ptr(0x0038, WordOrderingHighFirst)
 		if err != nil {
 			return MiscData{}, err
 		}
@@ -302,9 +305,9 @@ func (dev *Dev) ReadMiscData() (MiscData, error) {
 			r.Alarm = &details
 		}
 	}
-	r.DIPSwitch, err = dev.readInputRegister(0x003a)
+	r.DIPSwitch, err = dev.inputRegisters.ReadUint16Ptr(0x003a)
 	{
-		v, err := dev.readInputRegister(0x003b)
+		v, err := dev.inputRegisters.ReadUint16Ptr(0x003b)
 		if err != nil {
 			return MiscData{}, err
 		}
@@ -314,7 +317,7 @@ func (dev *Dev) ReadMiscData() (MiscData, error) {
 		}
 	}
 	{
-		v, err := dev.readInputRegister(0x004d)
+		v, err := dev.inputRegisters.ReadUint16Ptr(0x004d)
 		if err != nil {
 			return MiscData{}, err
 		}
@@ -323,7 +326,7 @@ func (dev *Dev) ReadMiscData() (MiscData, error) {
 			r.ChargeStatusLEDState = &v2
 		}
 	}
-	r.LightingShouldBeOn, err = dev.readInputRegister(0x004e)
+	r.LightingShouldBeOn, err = dev.inputRegisters.ReadUint16Ptr(0x004e)
 	if err != nil {
 		return MiscData{}, err
 	}
@@ -342,75 +345,75 @@ func (dev *Dev) ReadChargeSettings() (ChargeSettings, error) {
 
 	var r ChargeSettings
 
-	r.RegulationVoltageAt25C, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe000)
+	r.RegulationVoltageAt25C, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe000)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.FloatVoltageAt25C, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe001)
+	r.FloatVoltageAt25C, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe001)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.TimeBeforeEnteringFloat, err = dev.readHoldingRegister(0xe002)
+	r.TimeBeforeEnteringFloat, err = dev.holdingRegisters.ReadUint16Ptr(0xe002)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.TimeBeforeEnteringFloatDueToLowBattery, err = dev.readHoldingRegister(0xe003)
+	r.TimeBeforeEnteringFloatDueToLowBattery, err = dev.holdingRegisters.ReadUint16Ptr(0xe003)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.VoltageTriggerForLowBatteryFloatTime, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe004)
+	r.VoltageTriggerForLowBatteryFloatTime, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe004)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.VoltageToCancelFloat, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe005)
+	r.VoltageToCancelFloat, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe005)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.ExitFloatTime, err = dev.readHoldingRegister(0xe006)
+	r.ExitFloatTime, err = dev.holdingRegisters.ReadUint16Ptr(0xe006)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.EqualizeVoltageAt25C, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe007)
+	r.EqualizeVoltageAt25C, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe007)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.DaysBetweenEQCycles, err = dev.readHoldingRegister(0xe008)
+	r.DaysBetweenEQCycles, err = dev.holdingRegisters.ReadUint16Ptr(0xe008)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.EqualizeTimeLimitAboveEVReg, err = dev.readHoldingRegister(0xe009)
+	r.EqualizeTimeLimitAboveEVReg, err = dev.holdingRegisters.ReadUint16Ptr(0xe009)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.EqualizeTimeLimitAtEVEq, err = dev.readHoldingRegister(0xe00a)
+	r.EqualizeTimeLimitAtEVEq, err = dev.holdingRegisters.ReadUint16Ptr(0xe00a)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.ReferenceChargeVoltageLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe010)
+	r.ReferenceChargeVoltageLimit, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe010)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.TemperatureCompensationCoefficient, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe01a)
+	r.TemperatureCompensationCoefficient, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe01a)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.HighVoltageDisconnectAt25C, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe01b)
+	r.HighVoltageDisconnectAt25C, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe01b)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.HighVoltageReconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe01c)
+	r.HighVoltageReconnect, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe01c)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.MaximumChargeVoltageReference, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe01d)
+	r.MaximumChargeVoltageReference, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe01d)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.MaxBatteryTempCompensationLimit, err = dev.readHoldingRegisterFromUint16ToInt16(0xe01e)
+	r.MaxBatteryTempCompensationLimit, err = dev.holdingRegisters.ReadUint16AsInt16Ptr(0xe01e)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
-	r.MinBatteryTempCompensationLimit, err = dev.readHoldingRegisterFromUint16ToInt16(0xe01f)
+	r.MinBatteryTempCompensationLimit, err = dev.holdingRegisters.ReadUint16AsInt16Ptr(0xe01f)
 	if err != nil {
 		return ChargeSettings{}, err
 	}
@@ -429,27 +432,27 @@ func (dev *Dev) ReadLoadSettings() (LoadSettings, error) {
 
 	var r LoadSettings
 
-	r.LowVoltageDisconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe022)
+	r.LowVoltageDisconnect, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe022)
 	if err != nil {
 		return LoadSettings{}, err
 	}
-	r.LowVoltageReconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe023)
+	r.LowVoltageReconnect, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe023)
 	if err != nil {
 		return LoadSettings{}, err
 	}
-	r.LoadHighVoltageDisconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe024)
+	r.LoadHighVoltageDisconnect, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe024)
 	if err != nil {
 		return LoadSettings{}, err
 	}
-	r.LoadHighVoltageReconnect, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe025)
+	r.LoadHighVoltageReconnect, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe025)
 	if err != nil {
 		return LoadSettings{}, err
 	}
-	r.LVDLoadCurrentCompensation, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe026)
+	r.LVDLoadCurrentCompensation, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe026)
 	if err != nil {
 		return LoadSettings{}, err
 	}
-	r.LVDWarningTimeout, err = dev.readHoldingRegister(0xe027)
+	r.LVDWarningTimeout, err = dev.holdingRegisters.ReadUint16Ptr(0xe027)
 	if err != nil {
 		return LoadSettings{}, err
 	}
@@ -468,27 +471,27 @@ func (dev *Dev) ReadMiscSettings() (MiscSettings, error) {
 
 	var r MiscSettings
 
-	r.LEDGreenToGreenAndYellowLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe030)
+	r.LEDGreenToGreenAndYellowLimit, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe030)
 	if err != nil {
 		return MiscSettings{}, err
 	}
-	r.LEDGreenAndYellowToYellowLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe031)
+	r.LEDGreenAndYellowToYellowLimit, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe031)
 	if err != nil {
 		return MiscSettings{}, err
 	}
-	r.LEDYellowToYellowAndRedLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe032)
+	r.LEDYellowToYellowAndRedLimit, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe032)
 	if err != nil {
 		return MiscSettings{}, err
 	}
-	r.LEDYellowAndRedToRedFlashingLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe033)
+	r.LEDYellowAndRedToRedFlashingLimit, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe033)
 	if err != nil {
 		return MiscSettings{}, err
 	}
-	r.ModbusID, err = dev.readHoldingRegister(0xe034)
+	r.ModbusID, err = dev.holdingRegisters.ReadUint16Ptr(0xe034)
 	if err != nil {
 		return MiscSettings{}, err
 	}
-	r.MeterbusID, err = dev.readHoldingRegister(0xe035)
+	r.MeterbusID, err = dev.holdingRegisters.ReadUint16Ptr(0xe035)
 	if err != nil {
 		return MiscSettings{}, err
 	}
@@ -507,9 +510,67 @@ func (dev *Dev) ReadPWMSettings() (PWMSettings, error) {
 
 	var r PWMSettings
 
-	r.ChargeCurrentLimit, err = dev.readHoldingRegisterFromFloat16ToFloat32(0xe038)
+	r.ChargeCurrentLimit, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe038)
 	if err != nil {
 		return PWMSettings{}, err
+	}
+
+	return r, nil
+}
+
+func (dev *Dev) ReadStatistics() (Statistics, error) {
+	dev.mutex.Lock()
+	defer dev.mutex.Unlock()
+
+	err := dev.requestSetup()
+	if err != nil {
+		return Statistics{}, err
+	}
+
+	var r Statistics
+	r.Hourmeter, err = dev.holdingRegisters.ReadUint32Ptr(0xe040, WordOrderingLowFirst)
+	if err != nil {
+		return Statistics{}, err
+	}
+	r.AhLoadResettable, err = dev.holdingRegisters.ReadUint32AsFloat32Ptr(0xe042, WordOrderingLowFirst, 10)
+	if err != nil {
+		return Statistics{}, err
+	}
+	r.AhLoadTotal, err = dev.holdingRegisters.ReadUint32AsFloat32Ptr(0xe044, WordOrderingLowFirst, 10)
+	if err != nil {
+		return Statistics{}, err
+	}
+	r.AhChargeResettable, err = dev.holdingRegisters.ReadUint32AsFloat32Ptr(0xe046, WordOrderingLowFirst, 10)
+	if err != nil {
+		return Statistics{}, err
+	}
+	r.AhChargeTotal, err = dev.holdingRegisters.ReadUint32AsFloat32Ptr(0xe048, WordOrderingLowFirst, 10)
+	if err != nil {
+		return Statistics{}, err
+	}
+	r.KWhcResettable, err = dev.holdingRegisters.ReadUint16AsFloat32Ptr(0xe04a, 10)
+	if err != nil {
+		return Statistics{}, err
+	}
+	r.KWhcTotal, err = dev.holdingRegisters.ReadUint16AsFloat32Ptr(0xe04b, 10)
+	if err != nil {
+		return Statistics{}, err
+	}
+	r.BatteryVoltageMinimum, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe04c)
+	if err != nil {
+		return Statistics{}, err
+	}
+	r.BatteryVoltageMaximum, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe04d)
+	if err != nil {
+		return Statistics{}, err
+	}
+	r.ArrayVoltageMaximum, err = dev.holdingRegisters.ReadFloat16AsFloat32Ptr(0xe04e)
+	if err != nil {
+		return Statistics{}, err
+	}
+	r.TimeSinceLastEqualize, err = dev.holdingRegisters.ReadUint16Ptr(0xe04f)
+	if err != nil {
+		return Statistics{}, err
 	}
 
 	return r, nil
@@ -535,13 +596,13 @@ func (dev *Dev) ReadLoggedData() ([]LoggedDataRecord, error) {
 				return nil, err
 			}
 		}
-		hourmeter := fromUint32(v[0:2])
+		hourmeter := WordOrderingLowFirst.Uint32(v[0:2])
 		if (hourmeter != 0x00000000) && (hourmeter != 0xffffffff) {
 			records = append(records, LoggedDataRecord{
 				Hourmeter:                  hourmeter,
-				AlarmDaily:                 Alarm(fromUint32(v[2:4])).Details(),
-				LoadFaultDaily:             LoadFault(fromUint32(v[4:6])).Details(),
-				ArrayFaultDaily:            ArrayFault(fromUint32(v[6:8])).Details(),
+				AlarmDaily:                 Alarm(WordOrderingLowFirst.Uint32(v[2:4])).Details(),
+				LoadFaultDaily:             LoadFault(WordOrderingLowFirst.Uint32(v[4:6])).Details(),
+				ArrayFaultDaily:            ArrayFault(WordOrderingLowFirst.Uint32(v[6:8])).Details(),
 				BatteryVoltageMinimumDaily: float16.Frombits(v[8]).Float32(),
 				BatteryVoltageMaximumDaily: float16.Frombits(v[9]).Float32(),
 				AhChargeDaily:              float16.Frombits(v[10]).Float32(),
@@ -557,8 +618,24 @@ func (dev *Dev) ReadLoggedData() ([]LoggedDataRecord, error) {
 	return records, nil
 }
 
-func (dev *Dev) readInputRegister(addr uint16) (*uint16, error) {
-	v, err := dev.mc.ReadRegister(addr, modbus.INPUT_REGISTER)
+type Registers struct {
+	mc      *modbus.ModbusClient
+	regType modbus.RegType
+}
+
+func NewRegisters(mc *modbus.ModbusClient, regType modbus.RegType) *Registers {
+	return &Registers{
+		mc:      mc,
+		regType: regType,
+	}
+}
+
+func (r *Registers) ReadUint16(addr uint16) (uint16, error) {
+	return r.mc.ReadRegister(addr, r.regType)
+}
+
+func (r *Registers) ReadUint16Ptr(addr uint16) (*uint16, error) {
+	v, err := r.ReadUint16(addr)
 	if err != nil {
 		if errors.Is(err, modbus.ErrIllegalDataAddress) {
 			return nil, nil
@@ -566,12 +643,27 @@ func (dev *Dev) readInputRegister(addr uint16) (*uint16, error) {
 			return nil, err
 		}
 	}
-
 	return &v, nil
 }
 
-func (dev *Dev) readHoldingRegister(addr uint16) (*uint16, error) {
-	v, err := dev.mc.ReadRegister(addr, modbus.HOLDING_REGISTER)
+func (r *Registers) ReadFloat16(addr uint16) (float16.Float16, error) {
+	v, err := r.mc.ReadRegister(addr, r.regType)
+	if err != nil {
+		return 0, err
+	}
+	return float16.Frombits(v), nil
+}
+
+func (r *Registers) ReadFloat16AsFloat32(addr uint16) (float32, error) {
+	v, err := r.ReadFloat16(addr)
+	if err != nil {
+		return 0, err
+	}
+	return v.Float32(), nil
+}
+
+func (r *Registers) ReadFloat16AsFloat32Ptr(addr uint16) (*float32, error) {
+	v, err := r.ReadFloat16AsFloat32(addr)
 	if err != nil {
 		if errors.Is(err, modbus.ErrIllegalDataAddress) {
 			return nil, nil
@@ -579,12 +671,19 @@ func (dev *Dev) readHoldingRegister(addr uint16) (*uint16, error) {
 			return nil, err
 		}
 	}
-
 	return &v, nil
 }
 
-func (dev *Dev) readHoldingRegisterFromUint16ToInt16(addr uint16) (*int16, error) {
-	v, err := dev.mc.ReadRegister(addr, modbus.HOLDING_REGISTER)
+func (r *Registers) ReadUint16AsFloat32(addr uint16, divisor float32) (float32, error) {
+	v, err := r.ReadUint16(addr)
+	if err != nil {
+		return 0, err
+	}
+	return float32(v) / divisor, nil
+}
+
+func (r *Registers) ReadUint16AsFloat32Ptr(addr uint16, divisor float32) (*float32, error) {
+	v, err := r.ReadUint16AsFloat32(addr, divisor)
 	if err != nil {
 		if errors.Is(err, modbus.ErrIllegalDataAddress) {
 			return nil, nil
@@ -592,14 +691,19 @@ func (dev *Dev) readHoldingRegisterFromUint16ToInt16(addr uint16) (*int16, error
 			return nil, err
 		}
 	}
-
-	v2 := int16(v)
-
-	return &v2, nil
+	return &v, nil
 }
 
-func (dev *Dev) readInputRegisterFromFloat16ToFloat32(addr uint16) (*float32, error) {
-	v, err := dev.mc.ReadRegister(addr, modbus.INPUT_REGISTER)
+func (r *Registers) ReadUint16AsInt16(addr uint16) (int16, error) {
+	v, err := r.ReadUint16(addr)
+	if err != nil {
+		return 0, err
+	}
+	return int16(v), nil
+}
+
+func (r *Registers) ReadUint16AsInt16Ptr(addr uint16) (*int16, error) {
+	v, err := r.ReadUint16AsInt16(addr)
 	if err != nil {
 		if errors.Is(err, modbus.ErrIllegalDataAddress) {
 			return nil, nil
@@ -607,11 +711,19 @@ func (dev *Dev) readInputRegisterFromFloat16ToFloat32(addr uint16) (*float32, er
 			return nil, err
 		}
 	}
-	return pointer.ToFloat32(float16.Frombits(v).Float32()), nil
+	return &v, nil
 }
 
-func (dev *Dev) readHoldingRegisterFromFloat16ToFloat32(addr uint16) (*float32, error) {
-	v, err := dev.mc.ReadRegister(addr, modbus.HOLDING_REGISTER)
+func (r *Registers) ReadUint32(addr uint16, wordOrdering WordOrdering) (uint32, error) {
+	b, err := r.mc.ReadRegisters(addr, 2, r.regType)
+	if err != nil {
+		return 0, err
+	}
+	return wordOrdering.Uint32(b), nil
+}
+
+func (r *Registers) ReadUint32Ptr(addr uint16, wordOrdering WordOrdering) (*uint32, error) {
+	v, err := r.ReadUint32(addr, wordOrdering)
 	if err != nil {
 		if errors.Is(err, modbus.ErrIllegalDataAddress) {
 			return nil, nil
@@ -619,11 +731,19 @@ func (dev *Dev) readHoldingRegisterFromFloat16ToFloat32(addr uint16) (*float32, 
 			return nil, err
 		}
 	}
-	return pointer.ToFloat32(float16.Frombits(v).Float32()), nil
+	return &v, nil
 }
 
-func (dev *Dev) readInputRegisterFromUint16ToFloat32(addr uint16, divisor float32) (*float32, error) {
-	v, err := dev.mc.ReadRegister(addr, modbus.INPUT_REGISTER)
+func (r *Registers) ReadUint32AsFloat32(addr uint16, wordOrdering WordOrdering, divisor float32) (float32, error) {
+	v, err := r.ReadUint32(addr, wordOrdering)
+	if err != nil {
+		return 0, err
+	}
+	return float32(v) / divisor, nil
+}
+
+func (r *Registers) ReadUint32AsFloat32Ptr(addr uint16, wordOrdering WordOrdering, divisor float32) (*float32, error) {
+	v, err := r.ReadUint32AsFloat32(addr, wordOrdering, divisor)
 	if err != nil {
 		if errors.Is(err, modbus.ErrIllegalDataAddress) {
 			return nil, nil
@@ -631,38 +751,25 @@ func (dev *Dev) readInputRegisterFromUint16ToFloat32(addr uint16, divisor float3
 			return nil, err
 		}
 	}
-
-	f32 := float32(v) / divisor
-	return &f32, nil
+	return &v, nil
 }
 
-func (dev *Dev) readInputRegisterFromUint32(addr uint16) (*uint32, error) {
-	v, err := dev.mc.ReadRegisters(addr, 2, modbus.INPUT_REGISTER)
-	if err != nil {
-		if errors.Is(err, modbus.ErrIllegalDataAddress) {
-			return nil, nil
-		} else {
-			return nil, err
-		}
-	}
-	return pointer.ToUint32(fromUint32(v)), nil
-}
+type WordOrdering int
 
-func (dev *Dev) readInputRegisterFromUint32ToFloat32(addr uint16, divisor float32) (*float32, error) {
-	v, err := dev.mc.ReadRegisters(addr, 2, modbus.INPUT_REGISTER)
-	if err != nil {
-		if errors.Is(err, modbus.ErrIllegalDataAddress) {
-			return nil, nil
-		} else {
-			return nil, err
-		}
-	}
-	return pointer.ToFloat32(float32(fromUint32(v)) / divisor), nil
-}
+const (
+	WordOrderingHighFirst WordOrdering = iota
+	WordOrderingLowFirst
+)
 
-func fromUint32(v []uint16) uint32 {
+func (wordOrdering WordOrdering) Uint32(v []uint16) uint32 {
 	var b []byte
-	b = binary.BigEndian.AppendUint16(b, v[0])
-	b = binary.BigEndian.AppendUint16(b, v[1])
+	switch wordOrdering {
+	case WordOrderingHighFirst:
+		b = binary.BigEndian.AppendUint16(b, v[0])
+		b = binary.BigEndian.AppendUint16(b, v[1])
+	case WordOrderingLowFirst:
+		b = binary.BigEndian.AppendUint16(b, v[1])
+		b = binary.BigEndian.AppendUint16(b, v[0])
+	}
 	return binary.BigEndian.Uint32(b)
 }

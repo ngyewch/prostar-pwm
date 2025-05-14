@@ -7,7 +7,6 @@ require (
 	github.com/urfave/cli/v2 v2.27.6
 	github.com/x448/float16 v0.8.4
 	github.com/yassinebenaid/godump v0.11.1
-	go.octolab.org v0.12.2
 )
 
 require (

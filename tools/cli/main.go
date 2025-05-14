@@ -117,6 +117,11 @@ var (
 				Action: doPWMSettings,
 			},
 			{
+				Name:   "statistics",
+				Usage:  "statistics",
+				Action: doStatistics,
+			},
+			{
 				Name:   "logged-data",
 				Usage:  "logged data",
 				Action: doLoggedData,
