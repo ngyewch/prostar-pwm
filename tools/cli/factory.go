@@ -2,17 +2,17 @@ package main
 
 import (
 	prostar_pwm "github.com/ngyewch/prostar-pwm"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"sync"
 )
 
-func newDev(cCtx *cli.Context) (*prostar_pwm.Dev, error) {
-	client, err := newModbusClient(cCtx, nil)
+func newDev(cmd *cli.Command) (*prostar_pwm.Dev, error) {
+	client, err := newModbusClient(cmd, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	modbusUnitId := modbusUnitIdFlag.Get(cCtx)
+	modbusUnitId := cmd.Uint(modbusUnitIdFlag.Name)
 
 	err = client.Open()
 	if err != nil {

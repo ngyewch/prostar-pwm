@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/simonvetter/modbus"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"strings"
 	"time"
 )
@@ -21,12 +21,12 @@ func parseParity(s string) (uint, error) {
 	return 0, fmt.Errorf("invalid parity: %s", s)
 }
 
-func newModbusClient(cCtx *cli.Context, configurer func(cfg *modbus.ClientConfiguration)) (*modbus.ModbusClient, error) {
-	serialPort := serialPortFlag.Get(cCtx)
-	baudRate := baudRateFlag.Get(cCtx)
-	dataBits := dataBitsFlag.Get(cCtx)
-	parityString := parityFlag.Get(cCtx)
-	stopBits := stopBitsFlag.Get(cCtx)
+func newModbusClient(cmd *cli.Command, configurer func(cfg *modbus.ClientConfiguration)) (*modbus.ModbusClient, error) {
+	serialPort := cmd.String(serialPortFlag.Name)
+	baudRate := cmd.Uint(baudRateFlag.Name)
+	dataBits := cmd.Uint(dataBitsFlag.Name)
+	parityString := cmd.String(parityFlag.Name)
+	stopBits := cmd.Uint(stopBitsFlag.Name)
 
 	parity, err := parseParity(parityString)
 	if err != nil {

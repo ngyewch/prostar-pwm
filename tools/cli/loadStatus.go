@@ -1,9 +1,12 @@
 package main
 
-import "github.com/urfave/cli/v2"
+import (
+	"context"
+	"github.com/urfave/cli/v3"
+)
 
-func doLoadStatus(cCtx *cli.Context) error {
-	dev, err := newDev(cCtx)
+func doLoadStatus(ctx context.Context, cmd *cli.Command) error {
+	dev, err := newDev(cmd)
 	if err != nil {
 		return err
 	}

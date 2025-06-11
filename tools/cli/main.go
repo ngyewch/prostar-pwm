@@ -1,8 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"log"
 	"os"
 	"runtime/debug"
@@ -13,29 +14,29 @@ var (
 		Name:     "serial-port",
 		Usage:    "serial port",
 		Required: true,
-		EnvVars:  []string{"SERIAL_PORT"},
+		Sources:  cli.EnvVars("SERIAL_PORT"),
 		Category: "Serial",
 	}
 	baudRateFlag = &cli.UintFlag{
 		Name:     "baud-rate",
 		Usage:    "baud rate",
 		Value:    9600,
-		EnvVars:  []string{"BAUD_RATE"},
+		Sources:  cli.EnvVars("BAUD_RATE"),
 		Category: "Serial",
 	}
 	dataBitsFlag = &cli.UintFlag{
 		Name:     "data-bits",
 		Usage:    "data bits",
 		Value:    8,
-		EnvVars:  []string{"DATA_BITS"},
+		Sources:  cli.EnvVars("DATA_BITS"),
 		Category: "Serial",
 	}
 	parityFlag = &cli.StringFlag{
 		Name:    "parity",
 		Usage:   "parity",
 		Value:   "N",
-		EnvVars: []string{"PARITY"},
-		Action: func(cCtx *cli.Context, s string) error {
+		Sources: cli.EnvVars("PARITY"),
+		Action: func(ctx context.Context, cmd *cli.Command, s string) error {
 			_, err := parseParity(s)
 			return err
 		},
@@ -45,15 +46,15 @@ var (
 		Name:     "stop-bits",
 		Usage:    "stop bits",
 		Value:    2,
-		EnvVars:  []string{"STOP_BITS"},
+		Sources:  cli.EnvVars("STOP_BITS"),
 		Category: "Serial",
 	}
 	modbusUnitIdFlag = &cli.UintFlag{
 		Name:    "modbus-unit-id",
 		Usage:   "ModBus unit ID",
 		Value:   1,
-		EnvVars: []string{"MODBUS_UNIT_ID"},
-		Action: func(cCtx *cli.Context, v uint) error {
+		Sources: cli.EnvVars("MODBUS_UNIT_ID"),
+		Action: func(ctx context.Context, cmd *cli.Command, v uint) error {
 			if (v < 1) || (v > 247) {
 				return fmt.Errorf("invalid modbus-unit-id: %d", v)
 			}
@@ -62,7 +63,7 @@ var (
 		Category: "Modbus",
 	}
 
-	app = &cli.App{
+	app = &cli.Command{
 		Name:  "prostar-pwm",
 		Usage: "ProStar PWM CLI",
 		Commands: []*cli.Command{
@@ -144,7 +145,7 @@ func main() {
 		app.Version = buildInfo.Main.Version
 	}
 
-	err := app.Run(os.Args)
+	err := app.Run(context.Background(), os.Args)
 	if err != nil {
 		log.Fatal(err)
 	}
