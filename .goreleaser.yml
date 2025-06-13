@@ -21,11 +21,15 @@ builds:
     ldflags:
       - -s -w
       - -X main.version={{ if index .Env "VERSION" }}{{ .Env.VERSION }}{{ else }}{{ .Version }}{{ end }}
-      - -X main.commit={{ if index .Env "COMMIT" }}{{ .Env.COMMIT }}{{ else }}{{ .Commit }}{{ end }}
-      - -X main.commitTimestamp={{ if index .Env "COMMIT_TIMESTAMP" }}{{ .Env.COMMIT_TIMESTAMP }}{{ else }}{{ .CommitTimestamp }}{{ end }}
 archives:
   - formats:
       - zip
+nfpms:
+  - maintainer: Nick Ng <ngyewch@gmail.com>
+    description: ProStar PWM Solar Charge Controller utility
+    formats:
+      - deb
+      - rpm
 checksum:
   name_template: 'checksums.txt'
 changelog:
