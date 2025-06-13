@@ -10,6 +10,8 @@ import (
 )
 
 var (
+	version string
+
 	serialPortFlag = &cli.StringFlag{
 		Name:     "serial-port",
 		Usage:    "serial port",
@@ -140,10 +142,13 @@ var (
 )
 
 func main() {
-	buildInfo, _ := debug.ReadBuildInfo()
-	if buildInfo != nil {
-		app.Version = buildInfo.Main.Version
+	if version == "" {
+		buildInfo, _ := debug.ReadBuildInfo()
+		if buildInfo != nil {
+			version = buildInfo.Main.Version
+		}
 	}
+	app.Version = version
 
 	err := app.Run(context.Background(), os.Args)
 	if err != nil {
