@@ -1,9 +1,10 @@
 package main
 
 import (
+	"sync"
+
 	prostar_pwm "github.com/ngyewch/prostar-pwm"
 	"github.com/urfave/cli/v3"
-	"sync"
 )
 
 func newDev(cmd *cli.Command) (*prostar_pwm.Dev, error) {

@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/simonvetter/modbus"
-	"github.com/urfave/cli/v3"
 	"strings"
 	"time"
+
+	"github.com/simonvetter/modbus"
+	"github.com/urfave/cli/v3"
 )
 
 func parseParity(s string) (uint, error) {

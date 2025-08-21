@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/yassinebenaid/godump"
 	"os"
+
+	"github.com/yassinebenaid/godump"
 )
 
 var (

@@ -3,9 +3,10 @@ package prostar_pwm
 import (
 	"encoding/binary"
 	"errors"
+	"sync"
+
 	"github.com/simonvetter/modbus"
 	"github.com/x448/float16"
-	"sync"
 )
 
 type Dev struct {
